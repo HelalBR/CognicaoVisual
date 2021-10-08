@@ -573,3 +573,22 @@ You should get the following output (plus the downloaded model.h5 file):
 <img width="380" alt="Schermata 2021-10-08 alle 11 13 45" src="https://user-images.githubusercontent.com/19311371/136572696-7b043ffe-a31b-4e7d-a623-974043439fbc.png">
 
 # Connecting the driving simulator
+
+To connect the driving simulator to the trained model, first we need to install some libraries. If you are using Mac OS or Linux (Ubuntu 20.04 LTS), run the following command at the terminal:
+
+````
+pip install eventlet numpy flask keras tensorflow venv pillow opencv-python python-socketio
+````
+If you encounter any errors trying to install the tensorflow library, try the following:
+````
+conda install tensorflow
+````
+After all those libraries are installed, we need to install one more to go:
+
+````
+pip install 'h5py=2.10.0' --force-reinstall
+````
+
+Now we have everything we need to connect the driving simulator to the trained model. Download the files automatico.py and model.h5 and put them in the same folder. The file automatico.py is responsible for creating a socket that will connect with the driving simulator and, when selected autonomous mode, analyze every frame from the driving simulator using the trained model to decide the steering angle.
+
+
