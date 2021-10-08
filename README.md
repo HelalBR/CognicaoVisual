@@ -9,7 +9,7 @@ If you wish to learn more about the model proposed by Nvidia, you can read about
 
 This project is divided in 4 parts:
 1. [The driving simulator](#the-driving-simulator)
-2. Creating the Convolutional Neural Network (CNN) for training
+2. [Creating the Convolutional Neural Network (CNN) for training](#creating-the-convolutional-neural-network)
 3. Connecting the driving simulator with the CNN
 4. Model testing and validating
 
@@ -30,6 +30,8 @@ To gather the training data, just start the simulator, select the Track 1 (we wi
 Before start driving, remember to click on the Record Button (upright corner). Remember: a student is only as good as his teacher! Try to drive the best way you can. Avoid getting out of the road and try to stay at the middle of the lane most of the time. Since its a racing track, complete at least 2 laps and then turn around and complete at least 2 laps on the other way. This will avoid having a biased dataset for training (turning left mos of the time, for example).
 
 When you complete all the laps, click to stop recording (upright corner) and close the simulator. The dataset that will be used for training will be saved on your Desktop. It consists with pictures from 3 cameras (located on the right side, left side and center of the car) as well information about the speed, steering angle and throtle. 
+
+# Creating the Convolutional Neural Network
 
 
 Since we are using the Google Colab plataform, there is no need to prepare an environment to execute the Neural Network. Simply [click here](https://colab.research.google.com/drive/13nPasXwH141iL9O5fqDcbtoYr5VVhpv7?hl=en) to open the Google Colab Notebok containing the untrained neural network.
