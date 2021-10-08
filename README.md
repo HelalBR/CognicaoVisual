@@ -34,13 +34,16 @@ When you complete all the laps, click to stop recording (upright corner) and clo
 # Creating the Convolutional Neural Network
 
 
-Since we are using the Google Colab plataform, there is no need to prepare an environment to execute the Neural Network. Simply [click here](https://colab.research.google.com/drive/13nPasXwH141iL9O5fqDcbtoYr5VVhpv7?hl=en) to open the Google Colab Notebok containing the untrained neural network.
+Since we are using the Google Colab plataform, there is no need to prepare an environment to execute the Neural Network. Simply [click here](https://colab.research.google.com/drive/1fecPOfW5oZC3WviqG5GRXs6URtlkAobd?authuser=1&hl=pt-BR) to open the Google Colab Notebok containing the untrained neural network.
 First thing we need to do is change the runtime type to use a GPU as hardware accelerator. To do so, select Runtime and then Select Runtime Type. Under Hardware Accelerator, choose GPU in the dropdown menu and then click in save. That's all the configuration we need to do.
 
 Note: to execute every step just click on the play button located at the top left corner of each box that contain code.
 
 #### Step 1
-We need to import all the libraries used to train and validate the neural network (numpy, tensorflow and keras). Also, we need to import the libraries used to manipulate the files and plot graphs (matlibplot, os and PIL). After executing Step 1 you should get an output like this:
+First we need to install a library called imgaug. This python library helps you with augmenting images for your machine learning projects. It converts a set of input images into a new, much larger set of slightly altered images. Just run this Step and wait for its completion.
+
+#### Step 2
+We need to import all the libraries used to train and validate the neural network. Also, we need to import the libraries used to manipulate the files and plot graphs. After executing Step 2 you should get an output like this:
 
 ```json
 [name: "/device:CPU:0"
@@ -63,799 +66,508 @@ physical_device_desc: "device: 0, name: Tesla K80, pci bus id: 0000:00:04.0, com
 ```
 If you are using the correct runtime type, you shoudl see a GPU listed as a device_type.
 
-The code used to do all the imports is:
 
-```python
-import matplotlib.pyplot as plt
-import numpy as np
-import os
-import PIL
-import tensorflow as tf
-
-from tensorflow import keras
-from tensorflow.keras import layers
-from tensorflow.keras.models import Sequential
-tf.config.list_physical_devices('GPU')
-from tensorflow.python.client import device_lib
-
-print(device_lib.list_local_devices()) #imprimindo os tipos de dispositivos
-```
-
-#### Step 2
-We need to download the dataset containing the images for training, validation and testing. After downloading, we decompress the file and delete every hidden file that might be created during the compressing. This step might take a while depending on yout internet speed. After its done you should see the number 4550 as an output. It indicates the number of images in our dataset.
+#### Step 3
+We need to download the dataset containing the images for training, validation and testing. After downloading, we decompress the file and delete every hidden file that might be created during the compressing. This step might take a while depending on yout internet speed. A
 
 The code used is:
 
 ```python
 import pathlib
-
-!gdown --id 1j64rDwoltrcbYiVaAEI-AZTaRjISP2tv #Efetuando o download do dataset direto do meu Google Drive
-!tar -xzvf /content/datasetFlorestaV3.tgz #Descompactando o dataset
-data_dir = pathlib.Path('/content/datasetFlorestaV3/treinamento') #Definindo o diretório de treinamento
-
-#Os comandos abaixo servem para remover todos os arquivos ocultos/temporários das pastas do dataset
-!rm -rf /content/datasetFlorestaV3/treinamento/porco/._*
-!rm -rf /content/datasetFlorestaV3/treinamento/tatu/._*
-!rm -rf /content/datasetFlorestaV3/treinamento/veado/._*
-!rm -rf /content/datasetFlorestaV3/teste/porco/._*
-!rm -rf /content/datasetFlorestaV3/teste/tatu/._*
-!rm -rf /content/datasetFlorestaV3/teste/veado/._*
-
-image_count = len(list(data_dir.glob('*/*.JPG'))) #Contando quantas imagens possuem o dataset de treinamento
-print(image_count) #verificar se o número de imagens importadas coincide com o número de imagens do dataset de treinamento
-```
-
-#### Debug Step 1
-
-This is not a necessary step but i highly recommend you to execute it to be sure that everything went well during th download and decompress of the data set. As stated before, we have three classes: deer, armadillo and wild pig. If you see an aleatory image of each class after running this step you are good to go on.
-
-An example of output for each class:
-```python
-veado = list(data_dir.glob('veado/*'))
-PIL.Image.open(str(veado[200])) 
-#Exemplo de imagem do dataset de treinamento - VEADO
-```
-![image](https://user-images.githubusercontent.com/19311371/121084214-c3ed0d80-c7b6-11eb-8a9e-6583a0e842d7.png)
-
-```python
-porco = list(data_dir.glob('porco/*'))
-PIL.Image.open(str(porco[400])) 
-#Exemplo de imagem do dataset de treinamento - PORCO
-```
-![image](https://user-images.githubusercontent.com/19311371/121084296-dcf5be80-c7b6-11eb-956a-9bbb0725d18c.png)
-
-```python
-tatu = list(data_dir.glob('tatu/*'))
-PIL.Image.open(str(tatu[400])) 
-#Exemplo de imagem do dataset de treinamento - TATU
-```
-![image](https://user-images.githubusercontent.com/19311371/121084350-f0088e80-c7b6-11eb-96b8-dbb4ba5058ef.png)
-
-
-#### Step 3
-
-We need to define the loader parameters to use a the batch size of 32 images and the image height and width to 224 pixels (default size for VGG). Then we configure the training dataset to use 80% of the training images for training and 20% for validation. This would result in using 3640 images for training the neural network and 910 images for validating the training.
-
-The code used for the loader configuration is:
-```python
-#Para o treinamento serão utilizados batches de 32 imagens que serão redimensionadas para 400 por 400 pixels (altura e largura)
-batch_size = 32
-img_height = 224
-img_width = 224
-```
-
-The code used to set the training dataset to use 80% of the images:
-```python
-#definindo que 80% das imagens do dataset será usada para treinamento
-train_ds = tf.keras.preprocessing.image_dataset_from_directory(
-  data_dir,
-  validation_split=0.2,
-  subset="training",
-  seed=123,
-  image_size=(img_height, img_width),
-  batch_size=batch_size)
-```
-You should get the following output:
-```bash
-Found 4550 files belonging to 3 classes.
-Using 3640 files for training.
-```
-
-The code used to set the validation dataset to use 20% of the images:
-```python
-#definindo que 20% das imagens do dataset será usada par validação
-val_ds = tf.keras.preprocessing.image_dataset_from_directory(
-  data_dir,
-  validation_split=0.2,
-  subset="validation",
-  seed=123,
-  image_size=(img_height, img_width),
-  batch_size=batch_size)
-```
-You should get the following output:
-```bash
-Found 4550 files belonging to 3 classes.
-Using 910 files for training.
-```
-
-Just to check if the class names are correct, execute the code below and you should get as an output the name of the three classes:
-```python
-#verificando se foram criadas as classes com o nomes das pastas onde estão o dataset
-class_names = train_ds.class_names
-print(class_names)
-```
-```bash
-['porco', 'tatu', 'veado']
-```
-
-#### Debug Step 2
-
-To check if the training dataset was correctly configurated, run the code below to choose 9 aleatory images from the dataset and plot them with their classes. 
-```python
-#apenas para debug
-#verificar se até o momento tudo que foi feito com o dataset está correto
-import matplotlib.pyplot as plt
-
-plt.figure(figsize=(10, 10))
-for images, labels in train_ds.take(1):
-  for i in range(9):
-    ax = plt.subplot(3, 3, i + 1)
-    plt.imshow(images[i].numpy().astype("uint8"))
-    plt.title(class_names[labels[i]])
-    plt.axis("off")
-```
-If you get an output similar to this, it is safe to continue::
-
-![image](https://user-images.githubusercontent.com/19311371/121085569-6c4fa180-c7b8-11eb-8d3b-5d1c59daaf56.png)
-
-#### Debug Step 3
-The last Debug Step to check if the training dataset is correct is to print the tensor shape. Accordingly to our previously configuration, the tensor shpae should be (32, 224, 224, 3) where 32 represents the batch size, 224 the image height and width and 3 refers to the RGB channels of the image. We are also printing the label batch shape we should get (32,) since we have 32 labels (one for each image in the batch).
-
-The code used is:
-```python
-for image_batch, labels_batch in train_ds:
-  print(image_batch.shape)
-  print(labels_batch.shape)
-  break
-```
-
-You should see the following output:
-```bash
-(32, 224, 224, 3)
-(32,)
+!gdown --id 1YRf2QfJoIIxE11YMVxGhcr0DpSVYoJnp
+!unzip /content/imgCarro.zip #Descompactando o dataset
 ```
 
 #### Step 4
-
-We are dealing with a huge amount of data, we need to configure the dataset for performance. We'll be using a buffered prefetching to avoid I/O blocking when loading data. The cache() method keeps the images in memory after they're loaded off disk during the fisrt epoch of training. This will ensure the dataset does not become a bottleneck while training the model. Since the dataset is too large to fit into memory, this method is used to create a performant on-disk cache. The prefetch() method overlaps data preprocessing and model execution while training.
+Defining the name of the directory containing the dataset. In addition to the dataset images, we have to import a CSV file that contains information about each image. For every time one of the car's cameras captured an image, we have the following information:
+* Name of the photo that was captured by the camera in the middle of the car
+* Name of the photo that was captured by the camera on the left side of the car
+* Name of the photo that was captured by the camera on the right side of the car
+* Steering wheel angle
+* Accelerator pedal angle
+* Angle of the accelerator pedal if backing up
+* Normalized car speed. Sine 0 the car stopped and 1 the car at its maximum speed (set via software).
 
 The code used is:
-```python
-AUTOTUNE = tf.data.AUTOTUNE
 
-train_ds = train_ds.cache().shuffle(1000).prefetch(buffer_size=AUTOTUNE)
-val_ds = val_ds.cache().prefetch(buffer_size=AUTOTUNE)
+```python
+datadir = 'imgCarro'
+columns = ['center', 'left', 'right', 'steering', 'throttle', 'reverse', 'speed']
+data = pd.read_csv(os.path.join(datadir, 'driving_log.csv'), names = columns)
+pd.set_option('display.max_colwidth', -1)
+data.head()
 ```
 
-There is no output for this step.
+After executing Step 4 you should get an output like this:
+
+```json
+
+                                  center	                                                          left	                                                                    right	                       steering	throttle	reverse	speed
+0	C:\Users\Amer\Desktop\new_track\IMG\center_2018_07_16_17_11_43_382.jpg	C:\Users\Amer\Desktop\new_track\IMG\left_2018_07_16_17_11_43_382.jpg	C:\Users\Amer\Desktop\new_track\IMG\right_2018_07_16_17_11_43_382.jpg	0.0	0.0	0.0	0.649786
+1	C:\Users\Amer\Desktop\new_track\IMG\center_2018_07_16_17_11_43_670.jpg	C:\Users\Amer\Desktop\new_track\IMG\left_2018_07_16_17_11_43_670.jpg	C:\Users\Amer\Desktop\new_track\IMG\right_2018_07_16_17_11_43_670.jpg	0.0	0.0	0.0	0.627942
+2	C:\Users\Amer\Desktop\new_track\IMG\center_2018_07_16_17_11_43_724.jpg	C:\Users\Amer\Desktop\new_track\IMG\left_2018_07_16_17_11_43_724.jpg	C:\Users\Amer\Desktop\new_track\IMG\right_2018_07_16_17_11_43_724.jpg	0.0	0.0	0.0	0.622910
+3	C:\Users\Amer\Desktop\new_track\IMG\center_2018_07_16_17_11_43_792.jpg	C:\Users\Amer\Desktop\new_track\IMG\left_2018_07_16_17_11_43_792.jpg	C:\Users\Amer\Desktop\new_track\IMG\right_2018_07_16_17_11_43_792.jpg	0.0	0.0	0.0	0.619162
+4	C:\Users\Amer\Desktop\new_track\IMG\center_2018_07_16_17_11_43_860.jpg	C:\Users\Amer\Desktop\new_track\IMG\left_2018_07_16_17_11_43_860.jpg	C:\Users\Amer\Desktop\new_track\IMG\right_2018_07_16_17_11_43_860.jpg	0.0	0.0	0.0	0.615438
+```
 
 #### Step 5
 
-Now it is time to create our model using VGG16. Since we didnt standardize the data before, we need to add a normalization layer in the model to change the range of the RGB values from 0 to 255 to be standarzie values in the 0-1 range.
+Plotting the histogram of the data obtained in the training dataset. This step is necessary to verify that the data is not skewed in any position. In it we can see that most of the time the car has the steering wheel in a straight position (angle 0). This is normal while driving but for training the neural network can make her learn that she should stay with the steering wheel in a straight position.
 
-The VGG model with the normalization layer is created by the code below:
-
+The code used is:
 ```python
-num_classes = 3 #Veado, Porco, Tatu
-
-model = Sequential([
-  layers.experimental.preprocessing.Rescaling(1./255, input_shape=(img_height, img_width, 3)),
-  #Primeiro bloco convolucional
-  layers.Conv2D(64, 3, padding='same', activation='relu'),
-  layers.Conv2D(64, 3, padding='same', activation='relu'),
-  layers.MaxPooling2D(),
-  
-  #Segundo bloco convolucional
-  layers.Conv2D(128, 3, padding='same', activation='relu'),
-  layers.Conv2D(128, 3, padding='same', activation='relu'),
-  layers.MaxPooling2D(),
-
-  #Terceiro bloco convolucional
-  layers.Conv2D(256, 3, padding='same', activation='relu'),
-  layers.Conv2D(256, 3, padding='same', activation='relu'),
-  layers.Conv2D(256, 3, padding='same', activation='relu'),
-  layers.MaxPooling2D(),
-
-  #Quarto bloco convolucional
-  layers.Conv2D(512, 3, padding='same', activation='relu'),
-  layers.Conv2D(512, 3, padding='same', activation='relu'),
-  layers.Conv2D(512, 3, padding='same', activation='relu'),
-  layers.MaxPooling2D(),
-
-  #Quinto bloco convolucional
-  layers.Conv2D(512, 3, padding='same', activation='relu'),
-  layers.Conv2D(512, 3, padding='same', activation='relu'),
-  layers.Conv2D(512, 3, padding='same', activation='relu'),
-  layers.MaxPooling2D(),
-
-  #Camadas Densas (Fully Connected)
-  layers.Flatten(),
-  layers.Dense(4096, activation='relu'),
-  layers.Dropout(0.5),
-  layers.Dense(4096, activation='relu'),
-  layers.Dense(num_classes, activation = 'softmax')
-])
-
-
-model.summary()
+def path_leaf(path):
+  head, tail = ntpath.split(path)
+  return tail
+data['center'] = data['center'].apply(path_leaf)
+data['left'] = data['left'].apply(path_leaf)
+data['right'] = data['right'].apply(path_leaf)
+data.head()
+num_bins = 25
+samples_per_bin = 400
+hist, bins = np.histogram(data['steering'], num_bins)
+center = (bins[:-1]+ bins[1:]) * 0.5
+plt.bar(center, hist, width=0.05)
+plt.plot((np.min(data['steering']), np.max(data['steering'])), (samples_per_bin, samples_per_bin))
 ```
+You should see the following output:
 
-Since we are printing the model summary, you should see the following output:
-
-```bash
-Model: "sequential_2"
-_________________________________________________________________
-Layer (type)                 Output Shape              Param #   
-=================================================================
-rescaling_2 (Rescaling)      (None, 224, 224, 3)       0         
-_________________________________________________________________
-conv2d_13 (Conv2D)           (None, 224, 224, 64)      1792      
-_________________________________________________________________
-conv2d_14 (Conv2D)           (None, 224, 224, 64)      36928     
-_________________________________________________________________
-max_pooling2d_5 (MaxPooling2 (None, 112, 112, 64)      0         
-_________________________________________________________________
-conv2d_15 (Conv2D)           (None, 112, 112, 128)     73856     
-_________________________________________________________________
-conv2d_16 (Conv2D)           (None, 112, 112, 128)     147584    
-_________________________________________________________________
-max_pooling2d_6 (MaxPooling2 (None, 56, 56, 128)       0         
-_________________________________________________________________
-conv2d_17 (Conv2D)           (None, 56, 56, 256)       295168    
-_________________________________________________________________
-conv2d_18 (Conv2D)           (None, 56, 56, 256)       590080    
-_________________________________________________________________
-conv2d_19 (Conv2D)           (None, 56, 56, 256)       590080    
-_________________________________________________________________
-max_pooling2d_7 (MaxPooling2 (None, 28, 28, 256)       0         
-_________________________________________________________________
-conv2d_20 (Conv2D)           (None, 28, 28, 512)       1180160   
-_________________________________________________________________
-conv2d_21 (Conv2D)           (None, 28, 28, 512)       2359808   
-_________________________________________________________________
-conv2d_22 (Conv2D)           (None, 28, 28, 512)       2359808   
-_________________________________________________________________
-max_pooling2d_8 (MaxPooling2 (None, 14, 14, 512)       0         
-_________________________________________________________________
-conv2d_23 (Conv2D)           (None, 14, 14, 512)       2359808   
-_________________________________________________________________
-conv2d_24 (Conv2D)           (None, 14, 14, 512)       2359808   
-_________________________________________________________________
-conv2d_25 (Conv2D)           (None, 14, 14, 512)       2359808   
-_________________________________________________________________
-max_pooling2d_9 (MaxPooling2 (None, 7, 7, 512)         0         
-_________________________________________________________________
-flatten_1 (Flatten)          (None, 25088)             0         
-_________________________________________________________________
-dense_3 (Dense)              (None, 4096)              102764544 
-_________________________________________________________________
-dropout_1 (Dropout)          (None, 4096)              0         
-_________________________________________________________________
-dense_4 (Dense)              (None, 4096)              16781312  
-_________________________________________________________________
-dense_5 (Dense)              (None, 3)                 12291     
-=================================================================
-Total params: 134,272,835
-Trainable params: 134,272,835
-Non-trainable params: 0
-```
-
-#### Debug Step 4
-
-If you wish to see a SVG representation of the model just created, execute this debug step.
+<img width="383" alt="Schermata 2021-10-08 alle 10 57 10" src="https://user-images.githubusercontent.com/19311371/136569782-f7ac0566-8915-4374-aad0-9b910657c81d.png">
 
 #### Step 6
 
-Since the photos from the dataset were taken in the wild, the use of Data Augmentation would help the training because the dataset contains several photos of the same animal in different angles and positions.
+To get around the problem exposed in Step 5, let's remove some of the dataset entries in an attempt to increase the exposure of the other steering wheel angles. After removing some of the entries, we re-plot the histogram to see if the data is less skewed. 2590 samples were removed, remaining 1463 samples for learning.
+From the histogram we can see that the dataset is now more balanced. Even though we are most of the time with the steering wheel in the straight position, the other steering wheel angles now represent a significant portion of the learning process.
 
-The code used for Data Augmentation is:
-
+The code used is:
 ```python
-data_augmentation = keras.Sequential(
-  [
-    layers.experimental.preprocessing.RandomFlip("horizontal", 
-                                                 input_shape=(img_height, 
-                                                              img_width,
-                                                              3)),
-    layers.experimental.preprocessing.RandomRotation(0.1),
-    layers.experimental.preprocessing.RandomZoom(0.1),
-  ]
-)
-
-plt.figure(figsize=(10, 10))
-for images, _ in train_ds.take(1):
-  for i in range(9):
-    augmented_images = data_augmentation(images)
-    ax = plt.subplot(3, 3, i + 1)
-    plt.imshow(augmented_images[0].numpy().astype("uint8"))
-    plt.axis("off")
+print('total de dados:', len(data))
+remove_list = []
+for j in range(num_bins):
+  list_ = []
+  for i in range(len(data['steering'])):
+    if data['steering'][i] >= bins[j] and data['steering'][i] <= bins[j+1]:
+      list_.append(i)
+  list_ = shuffle(list_)
+  list_ = list_[samples_per_bin:]
+  remove_list.extend(list_)
+ 
+print('removidos:', len(remove_list))
+data.drop(data.index[remove_list], inplace=True)
+print('permaneceram:', len(data))
+ 
+hist, _ = np.histogram(data['steering'], (num_bins))
+plt.bar(center, hist, width=0.05)
+plt.plot((np.min(data['steering']), np.max(data['steering'])), (samples_per_bin, samples_per_bin))
 ```
+You should see the following output:
 
-You should see an output of 9 horizontaly rotated images:
-
-![image](https://user-images.githubusercontent.com/19311371/121207189-77094580-c84f-11eb-8d26-3072b4555bac.png)
+<img width="375" alt="Schermata 2021-10-08 alle 10 57 40" src="https://user-images.githubusercontent.com/19311371/136569958-def5aa46-0f6c-4813-be81-a3071115e079.png">
 
 #### Step 7
 
-The last step beofre the traingin is to compile the model and select the optmizer, the loss function and the metrics. We are using Adam as optmizer, Sparse Categorical Cross Entropy as the loss function and our metric is accuracy. 
+Preparing the dataset to be split between training dataset and validation dataset. An object is created containing the 3 photos captured by the cameras, along with acceleration, reverse, speed and steering wheel position information. As what we are trying to learn is the position of the steering wheel according to the position in which the car is, the defined function returns the directory that contains the images and the position of the steering wheel angle in each of the photos.
 
-The code is:
-
+The code used is:
 ```python
-model.compile(optimizer='adam',
-              loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-              metrics=['accuracy'])
+print(data.iloc[1])
+def load_img_steering(datadir, df):
+  image_path = []
+  steering = []
+  for i in range(len(data)):
+    indexed_data = data.iloc[i]
+    center, left, right = indexed_data[0], indexed_data[1], indexed_data[2]
+    image_path.append(os.path.join(datadir, center.strip()))
+    steering.append(float(indexed_data[3]))
+    image_path.append(os.path.join(datadir,left.strip()))
+    steering.append(float(indexed_data[3])+0.15)
+    image_path.append(os.path.join(datadir,right.strip()))
+    steering.append(float(indexed_data[3])-0.15)
+  image_paths = np.asarray(image_path)
+  steerings = np.asarray(steering)
+  return image_paths, steerings
+ 
+image_paths, steerings = load_img_steering(datadir + '/IMG', data)
 ```
+You should see the following output:
+````json
+center      center_2018_07_16_17_11_43_998.jpg
+left        left_2018_07_16_17_11_43_998.jpg  
+right       right_2018_07_16_17_11_43_998.jpg 
+steering    0                                 
+throttle    0                                 
+reverse     0                                 
+speed       0.606834                          
+Name: 6, dtype: object
+````
 
 #### Step 8
 
-Now we have everything ready to train our neural network. Just run the code below to use 10 epochs of training.
+Defining validation training datasets. For this, 80% of the images were used for training and 20% of the images for validation.
 
+The code used is:
 ```python
-epochs=10
-history = model.fit(
-  train_ds,
-  validation_data=val_ds,
-  epochs=epochs
-)
+X_train, X_valid, y_train, y_valid = train_test_split(image_paths, steerings, test_size=0.2, random_state=6)
+print('Amostras de treinamento: {}\nAmostras de validação: {}'.format(len(X_train), len(X_valid)))
 ```
-
-The output should be something like this:
-
-```bash
-Epoch 1/10
-114/114 [==============================] - 165s 1s/step - loss: 6.8301 - accuracy: 0.5508 - val_loss: 0.7702 - val_accuracy: 0.6484
-Epoch 2/10
-114/114 [==============================] - 98s 859ms/step - loss: 0.6504 - accuracy: 0.7093 - val_loss: 0.6587 - val_accuracy: 0.7044
-Epoch 3/10
-114/114 [==============================] - 98s 860ms/step - loss: 0.5781 - accuracy: 0.7618 - val_loss: 0.6000 - val_accuracy: 0.7275
-Epoch 4/10
-114/114 [==============================] - 97s 851ms/step - loss: 0.5120 - accuracy: 0.7970 - val_loss: 0.5652 - val_accuracy: 0.7725
-Epoch 5/10
-114/114 [==============================] - 97s 853ms/step - loss: 0.5033 - accuracy: 0.8093 - val_loss: 0.4477 - val_accuracy: 0.8374
-Epoch 6/10
-114/114 [==============================] - 97s 852ms/step - loss: 0.3603 - accuracy: 0.8673 - val_loss: 0.3972 - val_accuracy: 0.8670
-Epoch 7/10
-114/114 [==============================] - 97s 854ms/step - loss: 0.3073 - accuracy: 0.8882 - val_loss: 0.3081 - val_accuracy: 0.8846
-Epoch 8/10
-114/114 [==============================] - 97s 852ms/step - loss: 0.4469 - accuracy: 0.8346 - val_loss: 0.3935 - val_accuracy: 0.8505
-Epoch 9/10
-114/114 [==============================] - 97s 849ms/step - loss: 0.3071 - accuracy: 0.8865 - val_loss: 0.3275 - val_accuracy: 0.8868
-Epoch 10/10
-114/114 [==============================] - 97s 851ms/step - loss: 0.2200 - accuracy: 0.9280 - val_loss: 0.2475 - val_accuracy: 0.9165
-```
-Note that after the training the neural network has an accuracy of 92.80%.
-
-### Optional Step
-
-If you wish to save the entire trained network, just run this step and then download the meuModeloTreinadoVgg16.h5 file generated. You can import the network later and use it without having to train it again.
-
-#### Debug Step 5
-
-We can plot the Training and Validation Accuracy and Training and Validation Loss graphs after the training. Just run the code below to see the graphs:
-
-```python
-acc = history.history['accuracy']
-val_acc = history.history['val_accuracy']
-
-loss = history.history['loss']
-val_loss = history.history['val_loss']
-
-epochs_range = range(epochs)
-
-plt.figure(figsize=(8, 8))
-plt.subplot(1, 2, 1)
-plt.plot(epochs_range, acc, label='Training Accuracy')
-plt.plot(epochs_range, val_acc, label='Validation Accuracy')
-plt.legend(loc='lower right')
-plt.title('Training and Validation Accuracy')
-
-plt.subplot(1, 2, 2)
-plt.plot(epochs_range, loss, label='Training Loss')
-plt.plot(epochs_range, val_loss, label='Validation Loss')
-plt.legend(loc='upper right')
-plt.title('Training and Validation Loss')
-plt.show()
-```
-
-The output should be:
-
-![image](https://user-images.githubusercontent.com/19311371/121209366-2bf03200-c851-11eb-92f6-c90e9866255a.png)
+You should see the following output:
+````json
+Training Samples: 3511
+Valid Samples: 878
+````
 
 #### Step 9
 
-Now we can use our test dataset to test the neural network. First we are going to use only the armadillo photos and see how many of them the neural network classify correctly.
-
-After runing the code below: 
-
-```python
-# Testando apenas com fotos de Tatu
-
-import matplotlib.image as mpimg
-tatus = pathlib.Path('/content/datasetFlorestaV3/teste/tatu')
-images = list(tatus.glob('*.JPG'))
-
-v = 0
-p = 0
-t = 0
-
-for i in images:
-    img = mpimg.imread(i)
-    img = keras.preprocessing.image.load_img(
-        i, target_size=(img_height, img_width)
-    )
-    img_array = keras.preprocessing.image.img_to_array(img)
-    img_array = tf.expand_dims(img_array, 0) # Create a batch
-
-    predictions = model.predict(img_array)
-    score = tf.nn.softmax(predictions[0])
-
-    if class_names[np.argmax(score)] == "porco":
-        p = p + 1
-    elif class_names[np.argmax(score)] == "tatu":
-        t = t + 1
-    else:
-        v = v + 1
-  
-print('Veado: {}'.format(v)) 
-print('Porco: {}'.format(p)) 
-print('Tatu: {}'.format(t)) 
-total = v + p + t
-acerto =(t/total)*100
-print('A rede acertou {:.2}% das imagens' .format(acerto))
-```
-
-You should see the following output:
-
-```bash
-Veado: 2
-Porco: 0
-Tatu: 246
-A rede acertou 99.19% das imagens
-```
-
-Then we can test for wild pig photos:
-
-```python
-# Testando apenas com fotos de Porcos
-porcos = pathlib.Path('/content/datasetFlorestaV3/teste/porco')
-images = list(porcos.glob('*.JPG'))
-
-v = 0
-p = 0
-t = 0
-
-for i in images:
-    img = mpimg.imread(i)
-    img = keras.preprocessing.image.load_img(
-        i, target_size=(img_height, img_width)
-    )
-    img_array = keras.preprocessing.image.img_to_array(img)
-    img_array = tf.expand_dims(img_array, 0) # Create a batch
-
-    predictions = model.predict(img_array)
-    score = tf.nn.softmax(predictions[0])
-
-    if class_names[np.argmax(score)] == "porco":
-        p = p + 1
-    elif class_names[np.argmax(score)] == "tatu":
-        t = t + 1
-    else:
-        c = v + 1
-
-
-print('Porco: {}'.format(p)) 
-print('Tatu: {}'.format(t)) 
-print('Veado: {}'.format(v)) 
-total = v + p + t
-acerto =(p/total)*100
-print('A rede acertou {}% das imagens' .format(acerto))
-```
-The output should be:
-
-```python
-Porco: 164
-Tatu: 24
-Veado: 0
-A rede acertou 87.23% das imagens
-```
-
-And the last one would be the deer:
-
-```python
-# Testando apenas com fotos de Veados
-veados = pathlib.Path('/content/datasetFlorestaV3/teste/veado')
-images = list(veados.glob('*.JPG'))
-
-
-v = 0
-p = 0
-t = 0
-
-for i in images:
-    img = mpimg.imread(i)
-    img = keras.preprocessing.image.load_img(
-        i, target_size=(img_height, img_width)
-    )
-    img_array = keras.preprocessing.image.img_to_array(img)
-    img_array = tf.expand_dims(img_array, 0) # Create a batch
-
-    predictions = model.predict(img_array)
-    score = tf.nn.softmax(predictions[0])
-
-    if class_names[np.argmax(score)] == "porco":
-        p = p + 1
-    elif class_names[np.argmax(score)] == "tatu":
-        t = t + 1
-    else:
-        v = v + 1 
-
-print('Porco: {}'.format(p)) 
-print('Tatu: {}'.format(t)) 
-print('Veado: {}'.format(v)) 
-total = v + p + t
-acerto =(v/total)*100
-print('A rede acertou {:.2}% das imagens' .format(acerto))
-```
-
-```bash
-Porco: 68
-Tatu: 4
-Veado: 82
-A rede acertou 53.24% das imagens
-```
-
-#### Optional Step 2
-
-If you wish to see how the neural network is classifying each image you can execute this step for each class. The output should be the image with the prediction and score given by the neural netowrk. An example of output is showed below:
-
-<img width="359" alt="Schermata 2021-06-08 alle 12 19 59" src="https://user-images.githubusercontent.com/19311371/121212589-e2551680-c853-11eb-85ef-c4deaea30961.png">
-
-
-# Trained Neural Network
-
-Why train something already trained? For your convenience you can test the neural network without having to download almost 4 GB of data and spend time training it. Just [click here](https://colab.research.google.com/drive/1AZE2scb09Eixsfgydl-lnvbfuaTLb3uU?hl=en#scrollTo=pz30YZNqu4op) to open the Trained Neural Network. It has only 5 steps.
-
-First thing we need to do is change the runtime type to use a GPU as hardware accelerator. To do so, select Runtime and then Select Runtime Type. Under Hardware Accelerator, choose GPU in the dropdown menu and then click in save. That's all the configuration we need to do.
-
-Note: to execute every step just click on the play button located at the top left corner of each box that contain code.
-
-#### Step 1
-We need to import all the libraries used to train and validate the neural network (numpy, tensorflow and keras). Also, we need to import the libraries used to manipulate the files and plot graphs (matlibplot, os and PIL). After executing Step 1 you should get an output like this:
-
-```json
-[name: "/device:CPU:0"
-device_type: "CPU"
-memory_limit: 268435456
-locality {
-}
-incarnation: 11233807447978002051
-, name: "/device:GPU:0"
-device_type: "GPU"
-memory_limit: 11344216064
-locality {
-  bus_id: 1
-  links {
-  }
-}
-incarnation: 8972007624555681685
-physical_device_desc: "device: 0, name: Tesla K80, pci bus id: 0000:00:04.0, compute capability: 3.7"
-]
-```
-If you are using the correct runtime type, you shoudl see a GPU listed as a device_type.
-
-The code used to do all the imports is:
-
-```python
-import matplotlib.pyplot as plt
-import numpy as np
-import os
-import PIL
-import tensorflow as tf
-
-from tensorflow import keras
-from tensorflow.keras import layers
-from tensorflow.keras.models import Sequential
-tf.config.list_physical_devices('GPU')
-from tensorflow.python.client import device_lib
-
-print(device_lib.list_local_devices()) #imprimindo os tipos de dispositivos
-```
-
-#### Step 2
-We need to download the dataset containing the images for training, validation and testing. After downloading, we decompress the file and delete every hidden file that might be created during the compressing. This step might take a while depending on yout internet speed. After its done you should see the number 615 as an output. It indicates the number of images in our dataset.
+Just for viewing if the training and validation dataset have similar characteristics, the histogram containing the position of the steering wheel angle was plotted for both training and validation. We can see that both datasets are similar. This is necessary because, if they were very different, the training validation process could be considered bad despite the training being done correctly.
 
 The code used is:
-
 ```python
-import pathlib
-
-!gdown --id 1j64rDwoltrcbYiVaAEI-AZTaRjISP2tv #Efetuando o download do dataset direto do meu Google Drive
-!tar -xzvf /content/datasetFlorestaV3.tgz #Descompactando o dataset
-data_dir = pathlib.Path('/content/datasetFlorestaV3/treinamento') #Definindo o diretório de treinamento
-
-#Os comandos abaixo servem para remover todos os arquivos ocultos/temporários das pastas do dataset
-!rm -rf /content/datasetFlorestaV3/treinamento/porco/._*
-!rm -rf /content/datasetFlorestaV3/treinamento/tatu/._*
-!rm -rf /content/datasetFlorestaV3/treinamento/veado/._*
-!rm -rf /content/datasetFlorestaV3/teste/porco/._*
-!rm -rf /content/datasetFlorestaV3/teste/tatu/._*
-!rm -rf /content/datasetFlorestaV3/teste/veado/._*
-
-image_count = len(list(data_dir.glob('*/*.JPG'))) #Contando quantas imagens possuem o dataset de treinamento
-print(image_count) #verificar se o número de imagens importadas coincide com o número de imagens do dataset de treinamento
+fig, axes = plt.subplots(1, 2, figsize=(12, 4))
+axes[0].hist(y_train, bins=num_bins, width=0.05, color='blue')
+axes[0].set_title('Treinamento')
+axes[1].hist(y_valid, bins=num_bins, width=0.05, color='red')
+axes[1].set_title('Validação')
 ```
+You should see the following output:
 
-#### Step 3
+<img width="713" alt="Schermata 2021-10-08 alle 11 03 26" src="https://user-images.githubusercontent.com/19311371/136570837-f8747c93-4d6f-496f-bc18-74745efae325.png">
 
-We need to download the Trained Neural Network. The code below will do it for you:
+#### Step 10
 
+Defining the functions for Image Augmentation. These functions will be used in the next step to generate new images from the images that exist in the dataset. 4 functions were defined to change the original image generating new images, namely:
+
+* Enlarge the image
+* Apply Montion Blur to the image
+* Change image brightness
+* Mirror image
+
+The code used is:
 ```python
-!gdown --id 1Nr29d6b8Picr_LqqYb3YN416E50fShzq
+def zoom(image):
+  zoom = iaa.Affine(scale=(1, 1.3))
+  image = zoom.augment_image(image)
+  return image
+image = image_paths[random.randint(0, 1000)]
+original_image = mpimg.imread(image)
+zoomed_image = zoom(original_image)
+ 
+fig, axs = plt.subplots(1, 2, figsize=(15, 10))
+fig.tight_layout()
+ 
+axs[0].imshow(original_image)
+axs[0].set_title('Original Image')
+ 
+axs[1].imshow(zoomed_image)
+axs[1].set_title('Zoomed Image')
+
+def pan(image):
+  pan = iaa.Affine(translate_percent= {"x" : (-0.1, 0.1), "y": (-0.1, 0.1)})
+  image = pan.augment_image(image)
+  return image
+
+image = image_paths[random.randint(0, 1000)]
+original_image = mpimg.imread(image)
+panned_image = pan(original_image)
+ 
+fig, axs = plt.subplots(1, 2, figsize=(15, 10))
+fig.tight_layout()
+ 
+axs[0].imshow(original_image)
+axs[0].set_title('Original Image')
+ 
+axs[1].imshow(panned_image)
+axs[1].set_title('Panned Image')
+def img_random_brightness(image):
+    brightness = iaa.Multiply((0.2, 1.2))
+    image = brightness.augment_image(image)
+    return image
+image = image_paths[random.randint(0, 1000)]
+original_image = mpimg.imread(image)
+brightness_altered_image = img_random_brightness(original_image)
+ 
+fig, axs = plt.subplots(1, 2, figsize=(15, 10))
+fig.tight_layout()
+ 
+axs[0].imshow(original_image)
+axs[0].set_title('Original Image')
+ 
+axs[1].imshow(brightness_altered_image)
+axs[1].set_title('Brightness altered image ')
+
+def img_random_flip(image, steering_angle):
+    image = cv2.flip(image,1)
+    steering_angle = -steering_angle
+    return image, steering_angle
+random_index = random.randint(0, 1000)
+image = image_paths[random_index]
+steering_angle = steerings[random_index]
+ 
+ 
+original_image = mpimg.imread(image)
+flipped_image, flipped_steering_angle = img_random_flip(original_image, steering_angle)
+ 
+fig, axs = plt.subplots(1, 2, figsize=(15, 10))
+fig.tight_layout()
+ 
+axs[0].imshow(original_image)
+axs[0].set_title('Original Image - ' + 'Steering Angle:' + str(steering_angle))
+ 
+axs[1].imshow(flipped_image)
+axs[1].set_title('Flipped Image - ' + 'Steering Angle:' + str(flipped_steering_angle))
+
 ```
+You should see the following output:
 
-#### Step 4
+<img width="1069" alt="Schermata 2021-10-08 alle 11 05 38" src="https://user-images.githubusercontent.com/19311371/136571125-92bebe0d-d285-4683-b4a2-babb7ba3cbce.png">
 
-We need to create the model from the file we just downloaded. Again, just execute the code below and after a few seconds you will have the entire network trained at your service.
+#### Step 11
 
+Defining a function that will randomly call one of the Image Augmentation methods defined above. After calling this function our training dataset will be expanded.
+
+The code used is:
 ```python
-from keras.models import load_model
-model = load_model('/content/CNNTreinadaVGG16.h5')
-```
+def random_augment(image, steering_angle):
+    image = mpimg.imread(image)
+    if np.random.rand() < 0.5:
+      image = pan(image)
+    if np.random.rand() < 0.5:
+      image = zoom(image)
+    if np.random.rand() < 0.5:
+      image = img_random_brightness(image)
+    if np.random.rand() < 0.5:
+      image, steering_angle = img_random_flip(image, steering_angle)
+    
+    return image, steering_angle
 
-#### Step 5
-
-Now we can use our test dataset to test the neural network. First we are going to use only the armadillo photos and see how many of them the neural network classify correctly.
-
-After runing the code below: 
-
-```python
-# Testando apenas com fotos de Tatu
-
-import matplotlib.image as mpimg
-tatus = pathlib.Path('/content/datasetFlorestaV3/teste/tatu')
-images = list(tatus.glob('*.JPG'))
-
-v = 0
-p = 0
-t = 0
-
-for i in images:
-    img = mpimg.imread(i)
-    img = keras.preprocessing.image.load_img(
-        i, target_size=(img_height, img_width)
-    )
-    img_array = keras.preprocessing.image.img_to_array(img)
-    img_array = tf.expand_dims(img_array, 0) # Create a batch
-
-    predictions = model.predict(img_array)
-    score = tf.nn.softmax(predictions[0])
-
-    if class_names[np.argmax(score)] == "porco":
-        p = p + 1
-    elif class_names[np.argmax(score)] == "tatu":
-        t = t + 1
-    else:
-        v = v + 1
+ncol = 2
+nrow = 10
+ 
+fig, axs = plt.subplots(nrow, ncol, figsize=(15, 50))
+fig.tight_layout()
+ 
+for i in range(10):
+  randnum = random.randint(0, len(image_paths) - 1)
+  random_image = image_paths[randnum]
+  random_steering = steerings[randnum]
+    
+  original_image = mpimg.imread(random_image)
+  augmented_image, steering = random_augment(random_image, random_steering)
+    
+  axs[i][0].imshow(original_image)
+  axs[i][0].set_title("Original Image")
   
-print('Veado: {}'.format(v)) 
-print('Porco: {}'.format(p)) 
-print('Tatu: {}'.format(t)) 
-total = v + p + t
-acerto =(t/total)*100
-print('A rede acertou {:.2}% das imagens' .format(acerto))
+  axs[i][1].imshow(augmented_image)
+  axs[i][1].set_title("Augmented Image")
 ```
+
+#### Step 12
+The images used in the dataset have many elements that are not useful for training, such as:
+* the top of the photo has sky and trees
+* the bottom of the photo shows a part of the car
+* the sides of the photo have part of the environment beyond the track
+
+All these items mentioned above do not contribute positively to the training. The important thing for learning is to know the limits of the track as we are interested in defining the position of the car's steering wheel. For this, the image will go through a pre-processing to remove these elements from the image. Additionally, the image color can also be changed to a scale that facilitates training. Then the image's color scheme is changed, a Gaussian filter is applied, the image is resized and then normalized. Thus, the image that will be used in training has only the elements important for training and has a size substantially smaller than the original image.
+
+The code used is:
+````python
+def img_preprocess(img):
+    img = img[60:135,:,:]
+    img = cv2.cvtColor(img, cv2.COLOR_RGB2YUV)
+    img = cv2.GaussianBlur(img,  (3, 3), 0)
+    img = cv2.resize(img, (200, 66))
+    img = img/255
+    return img
+image = image_paths[100]
+original_image = mpimg.imread(image)
+preprocessed_image = img_preprocess(original_image)
+ 
+fig, axs = plt.subplots(1, 2, figsize=(15, 10))
+fig.tight_layout()
+axs[0].imshow(original_image)
+axs[0].set_title('Original Image')
+axs[1].imshow(preprocessed_image)
+axs[1].set_title('Preprocessed Image')
+````
 
 You should see the following output:
 
-```bash
-Veado: 0
-Porco: 7
-Tatu: 241
-A rede acertou 97.18% das imagens
-```
+<img width="1071" alt="Schermata 2021-10-08 alle 11 07 31" src="https://user-images.githubusercontent.com/19311371/136571613-d655c5d5-0d3a-4481-95b1-75d1c0023a4f.png">
 
-Then we can test for wild pig photos:
+#### Step 13
 
-```python
-# Testando apenas com fotos de Porcos
-porcos = pathlib.Path('/content/datasetFlorestaV3/teste/porco')
-images = list(porcos.glob('*.JPG'))
+Creating batches with images and position of the steering wheel for training.
 
-v = 0
-p = 0
-t = 0
+The code used is:
+````python
+def batch_generator(image_paths, steering_ang, batch_size, istraining):
+  
+  while True:
+    batch_img = []
+    batch_steering = []
+    
+    for i in range(batch_size):
+      random_index = random.randint(0, len(image_paths) - 1)
+      
+      if istraining:
+        im, steering = random_augment(image_paths[random_index], steering_ang[random_index])
+     
+      else:
+        im = mpimg.imread(image_paths[random_index])
+        steering = steering_ang[random_index]
+      
+      im = img_preprocess(im)
+      batch_img.append(im)
+      batch_steering.append(steering)
+    yield (np.asarray(batch_img), np.asarray(batch_steering))  
+````
 
-for i in images:
-    img = mpimg.imread(i)
-    img = keras.preprocessing.image.load_img(
-        i, target_size=(img_height, img_width)
-    )
-    img_array = keras.preprocessing.image.img_to_array(img)
-    img_array = tf.expand_dims(img_array, 0) # Create a batch
+#### Step 14
 
-    predictions = model.predict(img_array)
-    score = tf.nn.softmax(predictions[0])
+Defining training and validation batches. Shows an example of an image used in the training dataset and an image used in the validation dataset.
 
-    if class_names[np.argmax(score)] == "porco":
-        p = p + 1
-    elif class_names[np.argmax(score)] == "tatu":
-        t = t + 1
-    else:
-        c = v + 1
+The code used is:
+````python
+x_train_gen, y_train_gen = next(batch_generator(X_train, y_train, 1, 1))
+x_valid_gen, y_valid_gen = next(batch_generator(X_valid, y_valid, 1, 0))
+ 
+fig, axs = plt.subplots(1, 2, figsize=(15, 10))
+fig.tight_layout()
+ 
+axs[0].imshow(x_train_gen[0])
+axs[0].set_title('Training Image')
+ 
+axs[1].imshow(x_valid_gen[0])
+axs[1].set_title('Validation Image')
+````
 
+You should get the following output:
 
-print('Porco: {}'.format(p)) 
-print('Tatu: {}'.format(t)) 
-print('Veado: {}'.format(v)) 
-total = v + p + t
-acerto =(p/total)*100
-print('A rede acertou {}% das imagens' .format(acerto))
-```
-The output should be:
+<img width="1062" alt="Schermata 2021-10-08 alle 11 10 14" src="https://user-images.githubusercontent.com/19311371/136571983-ef015520-35cc-45cf-9f9e-ca476e78c362.png">
 
-```python
-Porco: 184
-Tatu: 0
-Veado: 0
-A rede acertou 100.00% das imagens
-```
+#### Step 15
 
-And the last one would be the deer:
+Defining the Nvidia model.
 
-```python
-# Testando apenas com fotos de Veados
-veados = pathlib.Path('/content/datasetFlorestaV3/teste/veado')
-images = list(veados.glob('*.JPG'))
+The code used is:
+````python
+def nvidia_model():
+ 
+  model = Sequential()
+  
+  model.add(Conv2D(24, kernel_size=(5,5), strides=(2,2), input_shape=(66,200,3),activation='elu'))
+  
+  model.add(Conv2D(36, kernel_size=(5,5), strides=(2,2), activation='elu'))
+  model.add(Conv2D(48, kernel_size=(5,5), strides=(2,2), activation='elu'))
+  model.add(Conv2D(64, kernel_size=(3,3), activation='elu'))
+  model.add(Conv2D(64, kernel_size=(3,3), activation='elu'))
+  model.add(Dropout(0.5))
+  
+  
+  model.add(Flatten())
+  model.add(Dense(100, activation='elu'))
+  model.add(Dropout(0.5))
+  
+  
+  model.add(Dense(50, activation='elu'))
+  model.add(Dense(10, activation ='elu'))
+  model.add(Dense(1))
+  
+  
+  optimizer= Adam(learning_rate=1e-3)
+  model.compile(loss='mse', optimizer=optimizer)
+  
+  return model
+````
 
+#### Step 16
 
-v = 0
-p = 0
-t = 0
+Training the Nvidia model.
 
-for i in images:
-    img = mpimg.imread(i)
-    img = keras.preprocessing.image.load_img(
-        i, target_size=(img_height, img_width)
-    )
-    img_array = keras.preprocessing.image.img_to_array(img)
-    img_array = tf.expand_dims(img_array, 0) # Create a batch
+The code used is:
+````python
+model = nvidia_model()
+print(model.summary())
+history = model.fit(batch_generator(X_train, y_train, 100, 1),
+                                  steps_per_epoch=300, 
+                                  epochs=10,
+                                  validation_data=batch_generator(X_valid, y_valid, 100, 0),
+                                  validation_steps=200,
+                                  verbose=1,
+                                  shuffle = 1)
+````
 
-    predictions = model.predict(img_array)
-    score = tf.nn.softmax(predictions[0])
+You should get the following output:
 
-    if class_names[np.argmax(score)] == "porco":
-        p = p + 1
-    elif class_names[np.argmax(score)] == "tatu":
-        t = t + 1
-    else:
-        v = v + 1 
+````json
+Model: "sequential"
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+conv2d (Conv2D)              (None, 31, 98, 24)        1824      
+_________________________________________________________________
+conv2d_1 (Conv2D)            (None, 14, 47, 36)        21636     
+_________________________________________________________________
+conv2d_2 (Conv2D)            (None, 5, 22, 48)         43248     
+_________________________________________________________________
+conv2d_3 (Conv2D)            (None, 3, 20, 64)         27712     
+_________________________________________________________________
+conv2d_4 (Conv2D)            (None, 1, 18, 64)         36928     
+_________________________________________________________________
+dropout (Dropout)            (None, 1, 18, 64)         0         
+_________________________________________________________________
+flatten (Flatten)            (None, 1152)              0         
+_________________________________________________________________
+dense (Dense)                (None, 100)               115300    
+_________________________________________________________________
+dropout_1 (Dropout)          (None, 100)               0         
+_________________________________________________________________
+dense_1 (Dense)              (None, 50)                5050      
+_________________________________________________________________
+dense_2 (Dense)              (None, 10)                510       
+_________________________________________________________________
+dense_3 (Dense)              (None, 1)                 11        
+=================================================================
+Total params: 252,219
+Trainable params: 252,219
+Non-trainable params: 0
+_________________________________________________________________
+None
+Epoch 1/10
+300/300 [==============================] - 254s 751ms/step - loss: 0.1329 - val_loss: 0.0666
+Epoch 2/10
+300/300 [==============================] - 223s 744ms/step - loss: 0.0798 - val_loss: 0.0576
+Epoch 3/10
+300/300 [==============================] - 219s 733ms/step - loss: 0.0733 - val_loss: 0.0530
+Epoch 4/10
+300/300 [==============================] - 223s 745ms/step - loss: 0.0713 - val_loss: 0.0484
+Epoch 5/10
+300/300 [==============================] - 220s 735ms/step - loss: 0.0689 - val_loss: 0.0465
+Epoch 6/10
+300/300 [==============================] - 221s 738ms/step - loss: 0.0665 - val_loss: 0.0431
+Epoch 7/10
+300/300 [==============================] - 220s 736ms/step - loss: 0.0649 - val_loss: 0.0471
+Epoch 8/10
+300/300 [==============================] - 220s 737ms/step - loss: 0.0603 - val_loss: 0.0444
+Epoch 9/10
+300/300 [==============================] - 223s 744ms/step - loss: 0.0618 - val_loss: 0.0484
+Epoch 10/10
+300/300 [==============================] - 217s 726ms/step - loss: 0.0594 - val_loss: 0.0411
+`````
+#### Step 17
 
-print('Porco: {}'.format(p)) 
-print('Tatu: {}'.format(t)) 
-print('Veado: {}'.format(v)) 
-total = v + p + t
-acerto =(v/total)*100
-print('A rede acertou {:.2}% das imagens' .format(acerto))
-```
+The result of the training. Don't forget to execute this step since it will download the trained model to your computer. It will be necessary for the test and validation of the model using the driving simulator.
 
-```bash
-Porco: 14
-Tatu: 14
-Veado: 126
-A rede acertou 81.82% das imagens
-```
+The code used is:
+````python
+plt.plot(history.history['loss'])
+plt.plot(history.history['val_loss'])
+plt.legend(['training', 'validation'])
+plt.title('Loss')
+plt.xlabel('Epoch')
+model.save('model.h5')
+from google.colab import files
+files.download('model.h5')
+````
+You should get the following output (plus the downloaded model.h5 file):
 
-#### Optional Step 
-
-If you wish to see how the neural network is classifying each image you can execute this step for each class. The output should be the image with the prediction and score given by the neural netowrk.
+<img width="380" alt="Schermata 2021-10-08 alle 11 13 45" src="https://user-images.githubusercontent.com/19311371/136572696-7b043ffe-a31b-4e7d-a623-974043439fbc.png">
