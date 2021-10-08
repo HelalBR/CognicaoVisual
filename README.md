@@ -3,6 +3,16 @@
 </h1>
 <p align="center">🚀 Step by step of how to use my project</p>
 
+This project is an implementation of the Nvidia model for self-driving car. It has an objective to train a model to drive a car autonomously on a simulated track. The ability of the model to drive the car is learned from cloning the behaviour of a human drive. The training data is gotten from examples of a real human driving in the simulator, then fed into a convolutional neural network which learns what to do (calculate the steering angle) for every frame in the simulation.
+
+If you wish to learn more about the model proposed by Nvidia, you can read about it at the Nvidia Developer Blog (https://developer.nvidia.com/blog/deep-learning-self-driving-cars/) or read the published paper about the model (https://images.nvidia.com/content/tegra/automotive/images/2016/solutions/pdf/end-to-end-dl-using-px.pdf).
+
+This project is divided in 4 parts:
+1. The driving simulator
+2. Creating the Convolutional Neural Network (CNN) for training
+3. Connecting the driving simulator with the CNN
+4. Model testing and validating
+
 This project aims to solve a real-life problem. Trap cameras are palced around farms capturing images of local wildlife. They are activated when they detect movement, however they are often activated due to wind, tree movement or even falling fruit. The idea is to identify in the photos taken by trap cameras three types of animals: armadillo, deer and wild pig.
 For training and validation of the neural network a dataset with more than 5000 photos taken by trap cameras was used. Training requires computing power hardly found in personal computers in our homes. To solve this problem, Google Colab was used for training and validation.
 
