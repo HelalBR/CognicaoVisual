@@ -1,5 +1,5 @@
 <h1 align="center">
-    <a href="https://pt-br.reactjs.org/">🔗 Using Convolutional Neural Network for Animal Classification</a>
+    <a href="https://pt-br.reactjs.org/">🔗 Behavioural Cloning Applied to Self-Driving Car on a Simulated Track using the Nvidia model</a>
 </h1>
 <p align="center">🚀 Step by step of how to use my project</p>
 
