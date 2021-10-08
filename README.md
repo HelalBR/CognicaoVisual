@@ -677,10 +677,16 @@ Now that we have the trained model and a way to connect the driving simulator wi
 That way, we can validate the model on the trained track and check if its working properly on any kind o track (generalization). The video showing the tests cand be accessed below:
 
 [Video 1](https://www.youtube.com/watch?v=SM72TvlOj1M) - Track 1 - slow speed (10 mph)
+
 [Video 2](https://www.youtube.com/watch?v=eZfYpphAyEw) - Track 1 - medium speed (20 mph)
+
 [Video 3](https://www.youtube.com/watch?v=45GPOqpjt2I) - Track 1 - high speed (30 mph)
+
 [Video 4](https://www.youtube.com/watch?v=iZf2pcDBq1s) - Track 2 - slow speed (10 mph)
+
 [VIdeo 5](https://www.youtube.com/watch?v=Mj4bqOaCCxA) - Track 2 - medium speed (20 mph)
+
 [Video 6](https://www.youtube.com/watch?v=zzvF4g0k9DA) - Track 2 - high speed (30 mph)
+
 
 As we can see from the videos, the model is well trained and is working properly with different types of track (generalization).
