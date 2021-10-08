@@ -13,7 +13,7 @@ This project is divided in 4 parts:
 1. [The driving simulator](#the-driving-simulator)
 2. [Creating the Convolutional Neural Network (CNN) for training](#creating-the-convolutional-neural-network)
 3. [Connecting the driving simulator with the CNN](#connecting-the-driving-simulator)
-4. [Model testing and validating](#model-testing-and-validation)
+4. [Model testing and validation](#model-testing-and-validation)
 
 
 # The driving simulator
@@ -664,6 +664,23 @@ Wait until the Web Server Gateway Interface (WSGI) is ready. You should see the 
 
 Then open the driving simualtor, select the desired track and click on Autonomous Drive. You can see a video of every step of this process, [here](https://www.youtube.com/watch?v=2i512pD1Llk).
 
-# Model testing and validating
+# Model testing and validation
 
-Now that we have the trained model and a way to connect the driving simulator with the trained model, we can test and validate the model is working properly.
+Now that we have the trained model and a way to connect the driving simulator with the trained model, we can test and validate the model is working properly. Six tests was carried out to evaluate the model performance. The tests was:
+* Speed limit of 10 mph on the same track used to train the model
+* Speed limit of 20 mph on the same track used to train the model
+* Speed limit of 30 mph on the same track used to train the model
+* Speed limit of 10 mph on a different track used to train the model
+* Speed limit of 20 mph on a different track used to train the model
+* Speed limit of 30 mph on a different track used to train the model
+
+That way, we can validate the model on the trained track and check if its working properly on any kind o track (generalization). The video showing the tests cand be accessed below:
+
+[Video 1](https://www.youtube.com/watch?v=SM72TvlOj1M) - Track 1 - slow speed (10 mph)
+[Video 2](https://www.youtube.com/watch?v=eZfYpphAyEw) - Track 1 - medium speed (20 mph)
+[Video 3](https://www.youtube.com/watch?v=45GPOqpjt2I) - Track 1 - high speed (30 mph)
+[Video 4](https://www.youtube.com/watch?v=iZf2pcDBq1s) - Track 2 - slow speed (10 mph)
+[VIdeo 5](https://www.youtube.com/watch?v=Mj4bqOaCCxA) - Track 2 - medium speed (20 mph)
+[Video 6](https://www.youtube.com/watch?v=zzvF4g0k9DA) - Track 2 - high speed (30 mph)
+
+As we can see from the videos, the model is well trained and is working properly with different types of track (generalization).
