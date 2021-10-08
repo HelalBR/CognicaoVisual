@@ -13,7 +13,7 @@ This project is divided in 4 parts:
 1. [The driving simulator](#the-driving-simulator)
 2. [Creating the Convolutional Neural Network (CNN) for training](#creating-the-convolutional-neural-network)
 3. [Connecting the driving simulator with the CNN](#connecting-the-driving-simulator)
-4. Model testing and validating
+4. [Model testing and validating](#model-testing-and-validation)
 
 
 # The driving simulator
@@ -662,4 +662,8 @@ Wait until the Web Server Gateway Interface (WSGI) is ready. You should see the 
 (9643) wsgi starting up on http://0.0.0.0:4567
 ````
 
-Then open the driving simualtor, selecte the desired track and click on Autonomous Drive. You can see a video of every step of this process, [here](https://www.youtube.com/watch?v=2i512pD1Llk).
+Then open the driving simualtor, select the desired track and click on Autonomous Drive. You can see a video of every step of this process, [here](https://www.youtube.com/watch?v=2i512pD1Llk).
+
+# Model testing and validating
+
+Now that we have the trained model and a way to connect the driving simulator with the trained model, we can test and validate the model is working properly.
