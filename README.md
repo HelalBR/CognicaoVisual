@@ -8,22 +8,29 @@ This project is an implementation of the Nvidia model for self-driving car. It h
 If you wish to learn more about the model proposed by Nvidia, you can read about it at the [Nvidia Developer Blog](https://developer.nvidia.com/blog/deep-learning-self-driving-cars/) or read the [published paper about the model](https://images.nvidia.com/content/tegra/automotive/images/2016/solutions/pdf/end-to-end-dl-using-px.pdf).
 
 This project is divided in 4 parts:
-1. The driving simulator
+1. [The driving simulator](#the-driving-simulator)
 2. Creating the Convolutional Neural Network (CNN) for training
 3. Connecting the driving simulator with the CNN
 4. Model testing and validating
 
-This project aims to solve a real-life problem. Trap cameras are palced around farms capturing images of local wildlife. They are activated when they detect movement, however they are often activated due to wind, tree movement or even falling fruit. The idea is to identify in the photos taken by trap cameras three types of animals: armadillo, deer and wild pig.
-For training and validation of the neural network a dataset with more than 5000 photos taken by trap cameras was used. Training requires computing power hardly found in personal computers in our homes. To solve this problem, Google Colab was used for training and validation.
 
-Next, it will be explained how to use the created neural network to solve the classification problem. For your convenience, two models have been made available on Google Colab:
-* The untrained neural network. It will be necessary to download the entire dataset (3.81 GB) and train the network before using it.
-* The neural network trained and ready to receive the photos you want to classify.
-
-For more technical information regarding the project, please read the article Use of Convolutional Neural Networks for Wild Animal Classification available on this GitHub.
 If you wish to execute the pre-trained neural network, please [click here.](#trained-neural-network)
 
-# Untrained Neural Network
+# The driving simulator
+
+For this project we'll use the driving simulator developed by Udacity for its [Udacity's Self-Driving Car Nanodegree](https://udacity.com/drive). It has two modes: 
+* Training mode: used to gather data about the driving pattern
+* Autonomous mode: used to test and validate the model created by the CNN
+
+To download the simulator, [click here](https://github.com/udacity/self-driving-car-sim), and select the Version 1. It is avaialable for Windows, Linux and Mac.
+To gather the training data, just start the simulator, select the Track 1 (we will use the Track 2 to validate the model generalization) and click in Training mode.
+
+<img width="805" alt="Schermata 2021-10-08 alle 10 23 06" src="https://user-images.githubusercontent.com/19311371/136565283-0d608807-7ac0-47b3-8ea3-604883ca3bf1.png">
+
+Before start driving, remember to click on the Record Button (upright corner). Remember: a student is only as good as his teacher! Try to drive the best way you can. Avoid getting out of the road and try to stay at the middle of the lane most of the time. Since its a racing track, complete at least 2 laps and then turn around and complete at least 2 laps on the other way. This will avoid having a biased dataset for training (turning left mos of the time, for example).
+
+When you complete all the laps, click to stop recording (upright corner) and close the simulator. The dataset that will be used for training will be saved on your Desktop. It consists with pictures from 3 cameras (located on the right side, left side and center of the car) as well information about the speed, steering angle and throtle. 
+
 
 Since we are using the Google Colab plataform, there is no need to prepare an environment to execute the Neural Network. Simply [click here](https://colab.research.google.com/drive/13nPasXwH141iL9O5fqDcbtoYr5VVhpv7?hl=en) to open the Google Colab Notebok containing the untrained neural network.
 First thing we need to do is change the runtime type to use a GPU as hardware accelerator. To do so, select Runtime and then Select Runtime Type. Under Hardware Accelerator, choose GPU in the dropdown menu and then click in save. That's all the configuration we need to do.
