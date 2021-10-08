@@ -12,11 +12,9 @@ For more information about this project, feel free to read the article Behaviour
 This project is divided in 4 parts:
 1. [The driving simulator](#the-driving-simulator)
 2. [Creating the Convolutional Neural Network (CNN) for training](#creating-the-convolutional-neural-network)
-3. Connecting the driving simulator with the CNN
+3. [Connecting the driving simulator with the CNN](#connecting-the-driving-simulator)
 4. Model testing and validating
 
-
-If you wish to execute the pre-trained neural network, please [click here.](#trained-neural-network)
 
 # The driving simulator
 
@@ -573,3 +571,5 @@ files.download('model.h5')
 You should get the following output (plus the downloaded model.h5 file):
 
 <img width="380" alt="Schermata 2021-10-08 alle 11 13 45" src="https://user-images.githubusercontent.com/19311371/136572696-7b043ffe-a31b-4e7d-a623-974043439fbc.png">
+
+# Connecting the driving simulator
