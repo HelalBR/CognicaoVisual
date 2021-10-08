@@ -5,7 +5,7 @@
 
 This project is an implementation of the Nvidia model for self-driving car. It has an objective to train a model to drive a car autonomously on a simulated track. The ability of the model to drive the car is learned from cloning the behaviour of a human drive. The training data is gotten from examples of a real human driving in the simulator, then fed into a convolutional neural network which learns what to do (calculate the steering angle) for every frame in the simulation.
 
-If you wish to learn more about the model proposed by Nvidia, you can read about it at the Nvidia Developer Blog (https://developer.nvidia.com/blog/deep-learning-self-driving-cars/) or read the published paper about the model (https://images.nvidia.com/content/tegra/automotive/images/2016/solutions/pdf/end-to-end-dl-using-px.pdf).
+If you wish to learn more about the model proposed by Nvidia, you can read about it at the [Nvidia Developer Blog] (https://developer.nvidia.com/blog/deep-learning-self-driving-cars/) or read the [published paper about the model] (https://images.nvidia.com/content/tegra/automotive/images/2016/solutions/pdf/end-to-end-dl-using-px.pdf).
 
 This project is divided in 4 parts:
 1. The driving simulator
