@@ -7,7 +7,7 @@ This project is an implementation of the Nvidia model for self-driving car. It h
 
 If you wish to learn more about the model proposed by Nvidia, you can read about it at the [Nvidia Developer Blog](https://developer.nvidia.com/blog/deep-learning-self-driving-cars/) or read the [published paper about the model](https://images.nvidia.com/content/tegra/automotive/images/2016/solutions/pdf/end-to-end-dl-using-px.pdf).
 
-For more information about this project, feel free to read the article Behavioural Cloning Applied to Self-Driving Car on a Simulated Track using the Nvidia model (available on this GitHub).
+For more information about this project, feel free to read the article [Behavioural Cloning Applied to Self-Driving Car on a Simulated Track using the Nvidia model](https://github.com/HelalBR/CognicaoVisual/blob/main/Behavioural_Cloning_Applied_to_Self_Driving_Car_on_a_Simulated_Track_using_the_Nvidia_model.pdf) (available on this GitHub).
 
 This project is divided in 4 parts:
 1. [The driving simulator](#the-driving-simulator)
